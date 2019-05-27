@@ -38,7 +38,7 @@ def save_imgs(args, e1, e2, decoder, iters):
         exps = torch.cat(exps, 0)
 
     vutils.save_image(exps,
-                      '%s/experiments_%06d.png' % (args.out, iters),
+                      '%s/experiments_%07d.png' % (args.out, iters),
                       normalize=True, nrow=args.num_display + 1)
 
 
@@ -71,12 +71,13 @@ def interpolate(args, e1, e2, decoder):
 
 
 def get_test_imgs(args):
-    comp_transform = transforms.Compose([
-        transforms.CenterCrop(args.crop),
-        transforms.Resize(args.resize),
-        transforms.ToTensor(),
-        transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))
-    ])
+    prep_fns = []
+    if args.crop is not None:
+        prep_fns.append(transforms.CenterCrop(args.crop))
+    prep_fns.extend([transforms.Resize((args.resize, args.resize)),
+                     transforms.ToTensor(),
+                     transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))])
+    comp_transform = transforms.Compose(prep_fns)
 
     domA_test = CustomDataset(os.path.join(args.root, 'testA.txt'), transform=comp_transform)
     domB_test = CustomDataset(os.path.join(args.root, 'testB.txt'), transform=comp_transform)

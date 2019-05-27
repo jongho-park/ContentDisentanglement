@@ -19,13 +19,15 @@ def train(args):
 
     _iter = 0
 
-    comp_transform = transforms.Compose([
-        transforms.CenterCrop(args.crop),
-        transforms.Resize(args.resize),
-        transforms.RandomHorizontalFlip(),
-        transforms.ToTensor(),
-        transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))
-    ])
+    prep_fns = []
+    if args.crop is not None:
+        prep_fns.append(transforms.CenterCrop(args.crop))
+    if args.hflip:
+        prep_fns.append(transforms.RandomHorizontalFlip())
+    prep_fns.extend([transforms.Resize((args.resize, args.resize)),
+                     transforms.ToTensor(),
+                     transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))])
+    comp_transform = transforms.Compose(prep_fns)
 
     domA_train = CustomDataset(os.path.join(args.root, 'trainA.txt'), transform=comp_transform)
     domB_train = CustomDataset(os.path.join(args.root, 'trainB.txt'), transform=comp_transform)
@@ -160,12 +162,14 @@ if __name__ == '__main__':
     parser.add_argument('--bs', type=int, default=32)
     parser.add_argument('--iters', type=int, default=1250000)
     parser.add_argument('--resize', type=int, default=128)
-    parser.add_argument('--crop', type=int, default=178)
+    # parser.add_argument('--crop', type=int, default=178)
+    parser.add_argument('--crop', type=int)
+    parser.add_argument('--hflip', action='store_true')
     parser.add_argument('--sep', type=int, default=25)
     parser.add_argument('--discweight', type=float, default=0.001)
     parser.add_argument('--disclr', type=float, default=0.0002)
-    parser.add_argument('--progress_iter', type=int, default=100)
-    parser.add_argument('--display_iter', type=int, default=5000)
+    parser.add_argument('--progress_iter', type=int, default=500)
+    parser.add_argument('--display_iter', type=int, default=1000)
     parser.add_argument('--save_iter', type=int, default=10000)
     parser.add_argument('--load', default='')
     parser.add_argument('--num_display', type=int, default=12)
