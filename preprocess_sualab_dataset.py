@@ -33,10 +33,10 @@ def _get_train_test_fnames(trainset_fpath):
 
     validset_fname, testset_fname = 'validation', 'test'
     if 't_fold' in gdict:
-        validset_fname += '{}'.format(gdict['t_fold'])
+        validset_fname += '{}_'.format(gdict['t_fold'])
         testset_fname += '{}'.format(gdict['t_fold'])
     if 'v_fold' in gdict:
-        validset_fname += '_{}'.format(gdict['v_fold'])
+        validset_fname += '{}'.format(gdict['v_fold'])
     validset_fname += '.txt'
     testset_fname += '.txt'
     validset_fpath = osp.join(osp.dirname(trainset_fpath), validset_fname)
