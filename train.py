@@ -1,4 +1,5 @@
 import os
+import os.path as osp
 import torch
 from torch import nn
 from torch import optim
@@ -9,12 +10,16 @@ import torchvision.transforms as transforms
 from models import E1, E2, Decoder, Disc
 from utils import save_imgs, save_model, load_model
 from utils import CustomDataset
+import timer
 
 import argparse
 
 
 def train(args):
-    if not os.path.exists(args.out):
+    timer.reset_timer()
+    timer.set_tag(osp.basename(args.out))
+
+    if not osp.exists(args.out):
         os.makedirs(args.out)
 
     _iter = 0
@@ -29,8 +34,8 @@ def train(args):
                      transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))])
     comp_transform = transforms.Compose(prep_fns)
 
-    domA_train = CustomDataset(os.path.join(args.root, 'trainA.txt'), transform=comp_transform)
-    domB_train = CustomDataset(os.path.join(args.root, 'trainB.txt'), transform=comp_transform)
+    domA_train = CustomDataset(osp.join(args.root, 'trainA.txt'), transform=comp_transform)
+    domB_train = CustomDataset(osp.join(args.root, 'trainB.txt'), transform=comp_transform)
 
     A_label = torch.full((args.bs,), 1)
     B_label = torch.full((args.bs,), 0)
@@ -64,7 +69,7 @@ def train(args):
     disc_optimizer = optim.Adam(disc_params, lr=args.disclr, betas=(0.5, 0.999))
 
     if args.load != '':
-        save_file = os.path.join(args.load, 'checkpoint')
+        save_file = osp.join(args.load, 'checkpoint')
         _iter = load_model(save_file, e1, e2, decoder, ae_optimizer, disc, disc_optimizer)
 
     e1 = e1.train()
@@ -72,7 +77,7 @@ def train(args):
     decoder = decoder.train()
     disc = disc.train()
 
-    print('Started training...')
+    timer.tprint('Started training...')
     while True:
         domA_loader = torch.utils.data.DataLoader(domA_train, batch_size=args.bs,
                                                   shuffle=True, num_workers=6)
@@ -134,7 +139,7 @@ def train(args):
                 disc_optimizer.step()
 
             if _iter % args.progress_iter == 0:
-                print('Outfile: %s <<>> Iteration %d' % (args.out, _iter))
+                timer.tprint('Outfile: %s <<>> Iteration %d' % (args.out, _iter))
 
             if _iter % args.display_iter == 0:
                 e1 = e1.eval()
@@ -148,7 +153,7 @@ def train(args):
                 decoder = decoder.train()
 
             if _iter % args.save_iter == 0:
-                save_file = os.path.join(args.out, 'checkpoint')
+                save_file = osp.join(args.out, 'checkpoint')
                 save_model(save_file, e1, e2, decoder, ae_optimizer, disc, disc_optimizer, _iter)
 
             _iter += 1
